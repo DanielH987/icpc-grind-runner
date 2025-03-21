@@ -1,0 +1,26 @@
+# Node.js
+node_modules/
+.env
+dist/
+*.log
+
+# Docker
+*.tar
+*.img
+*.pid
+*.lock
+
+# Temporary run files
+temp/
+*.out
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# IDE-specific
+.vscode/
+.idea/
+
+# Docker image cache if you store them
+docker-cache/
