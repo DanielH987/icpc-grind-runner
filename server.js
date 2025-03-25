@@ -47,27 +47,30 @@ app.post("/run", async (req, res) => {
   fs.writeFileSync(inputPath, input);
 
   const imageTag = `code-runner-${id}`;
+  const dockerfilePath = path.join("Dockerfiles", dockerfile);
 
   activeRuns++;
   exec(
-    `docker build -f Dockerfiles/${dockerfile} -t ${imageTag} ${tempDir}`,
+    `docker build -f ${dockerfilePath} -t ${imageTag} ${tempDir}`,
     { timeout: TIMEOUT },
     (err, stdout, stderr) => {
       if (err) {
         activeRuns--;
-        return res.status(500).json({ error: stderr || "Build failed" });
+        fs.rmSync(tempDir, { recursive: true, force: true });
+        return res.status(500).json({ error: stderr || stdout || "Docker build failed" });
       }
 
+      // Only run if build succeeded
       exec(
-        `docker run --rm --memory=128m --cpus=".5" --security-opt no-new-privileges --security-opt seccomp=unconfined ${imageTag}`,
+        `docker run --rm --memory=128m --cpus=".5" --security-opt no-new-privileges --security-opt seccomp=unconfined -i ${imageTag} < ${inputPath}`,
         { timeout: TIMEOUT },
         (err, stdout, stderr) => {
           activeRuns--;
-          exec(`docker rmi ${imageTag}`, () => {}); // Cleanup
-          fs.rmSync(tempDir, { recursive: true, force: true });
+          exec(`docker rmi ${imageTag}`, () => {}); // cleanup image
+          fs.rmSync(tempDir, { recursive: true, force: true }); // cleanup temp
 
           if (err) {
-            return res.status(200).json({ error: stderr || "Execution failed" });
+            return res.status(200).json({ error: stderr || stdout || "Execution failed" });
           }
 
           return res.json({ output: stdout });
