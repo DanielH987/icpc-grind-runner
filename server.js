@@ -80,6 +80,13 @@ app.post("/run", async (req, res) => {
   );
 });
 
-app.listen(PORT, () => {
-  console.log(`Code Runner listening on port ${PORT}`);
+const https = require("https");
+
+const httpsOptions = {
+  key: fs.readFileSync(path.join(__dirname, "selfsigned.key")),
+  cert: fs.readFileSync(path.join(__dirname, "selfsigned.crt")),
+};
+
+https.createServer(httpsOptions, app).listen(443, () => {
+  console.log("✅ Code Runner HTTPS server running on port 443");
 });
