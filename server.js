@@ -3,6 +3,7 @@ const { exec } = require("child_process");
 const { v4: uuidv4 } = require("uuid");
 const fs = require("fs");
 const path = require("path");
+const rateLimit = require("express-rate-limit");
 
 const app = express();
 app.use(express.json());
@@ -12,6 +13,18 @@ const TIMEOUT = 5000; // 5 seconds timeout
 const ALLOWED_LANGUAGES = ["js", "python", "cpp"];
 const MAX_CONCURRENT_RUNS = 5; // Adjust as needed
 let activeRuns = 0;
+
+// Limit to 50 requests per minute per IP
+const limiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 50, // Limit each IP to 50 requests per `window` (per minute)
+  message: {
+    error: "Too many requests. Please try again after a minute.",
+  },
+  standardHeaders: true, // Return rate limit info in headers
+  legacyHeaders: false,  // Disable the `X-RateLimit-*` headers
+});
+app.use("/run", limiter);
 
 app.post("/run", async (req, res) => {
   const { language, code, input = "" } = req.body;
