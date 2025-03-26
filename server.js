@@ -17,7 +17,7 @@ let activeRuns = 0;
 // Limit to 50 requests per minute per IP
 const limiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
-  max: 50, // Limit each IP to 50 requests per `window` (per minute)
+  max: 2, // Limit each IP to 50 requests per `window` (per minute)
   message: {
     error: "Too many requests. Please try again after a minute.",
   },
