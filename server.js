@@ -4,8 +4,9 @@ const fs = require("fs");
 const path = require("path");
 const rateLimit = require("express-rate-limit");
 const https = require("https");
-const { Job } = require("bullmq");
+const { Job, QueueEvents } = require("bullmq");
 const codeQueue = require("./queue");
+const connection = require("./redis");
 
 const app = express();
 app.use(express.json());
@@ -17,15 +18,14 @@ const ALLOWED_LANGUAGES = ["js", "python", "cpp"];
 const limiter = rateLimit({
   windowMs: 60 * 1000,
   max: 50,
-  message: {
-    error: "Too many requests. Please try again after a minute.",
-  },
+  message: { error: "Too many requests. Please try again after a minute." },
   standardHeaders: true,
   legacyHeaders: false,
 });
 app.use("/run", limiter);
 
-// ✅ Replace /run logic to enqueue the job
+const queueEvents = new QueueEvents("code-runner", { connection });
+
 app.post("/run", async (req, res) => {
   const { language, code, input = "" } = req.body;
 
@@ -40,9 +40,7 @@ app.post("/run", async (req, res) => {
       input,
     });
 
-    // Wait for the job to complete with a timeout
-    const result = await job.waitUntilFinished(codeQueue, 15000); // timeout in ms
-
+    const result = await job.waitUntilFinished(queueEvents, 15000); // 15s timeout
     res.json({ result });
   } catch (err) {
     res.status(500).json({ error: "Failed to execute job", detail: err.message });

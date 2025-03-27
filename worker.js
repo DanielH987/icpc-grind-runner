@@ -5,9 +5,7 @@ const path = require("path");
 const { exec } = require("child_process");
 const { v4: uuidv4 } = require("uuid");
 
-const connection = new IORedis({
-    maxRetriesPerRequest: null,
-});
+const connection = new IORedis({ maxRetriesPerRequest: null });
 
 const worker = new Worker(
     "code-runner",
@@ -36,24 +34,21 @@ const worker = new Worker(
         const imageTag = `code-runner-${id}`;
 
         return new Promise((resolve, reject) => {
-            exec(
-                `docker build -f Dockerfiles/${dockerfile} -t ${imageTag} ${tempDir}`,
-                (err, stdout, stderr) => {
-                    if (err) return reject(stderr);
-
-                    exec(
-                        `docker run --rm --memory=128m --cpus=".5" ${imageTag}`,
-                        (err, stdout, stderr) => {
-                            exec(`docker rmi ${imageTag}`, () => { });
-                            fs.rmSync(tempDir, { recursive: true, force: true });
-
-                            if (err) return resolve({ error: stderr });
-
-                            return resolve({ output: stdout });
-                        }
-                    );
+            exec(`docker build -f Dockerfiles/${dockerfile} -t ${imageTag} ${tempDir}`, (err, stdout, stderr) => {
+                if (err) {
+                    job.updateReturnValue({ error: stderr });
+                    return reject(stderr);
                 }
-            );
+
+                exec(`docker run --rm --memory=128m --cpus=".5" ${imageTag}`, (err, stdout, stderr) => {
+                    exec(`docker rmi ${imageTag}`, () => { });
+                    fs.rmSync(tempDir, { recursive: true, force: true });
+
+                    const result = err ? { error: stderr } : { output: stdout };
+                    job.updateReturnValue(result);
+                    return resolve(result);
+                });
+            });
         });
     },
     { connection }
