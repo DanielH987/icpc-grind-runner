@@ -34,15 +34,18 @@ app.post("/run", async (req, res) => {
   }
 
   try {
-    // Add job to queue
-    const job = await codeQueue.add("execute", { language, code, input });
+    const job = await codeQueue.add("execute", {
+      language,
+      code,
+      input,
+    });
 
-    // Wait until job is completed (or failed)
-    const result = await job.waitUntilFinished();
+    // Wait for the job to complete with a timeout
+    const result = await job.waitUntilFinished(codeQueue, 15000); // timeout in ms
 
-    return res.json(result); // return output or error directly
+    res.json({ result });
   } catch (err) {
-    return res.status(500).json({ error: "Execution failed or timed out" });
+    res.status(500).json({ error: "Failed to execute job", detail: err.message });
   }
 });
 
