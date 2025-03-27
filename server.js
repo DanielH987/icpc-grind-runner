@@ -34,27 +34,16 @@ app.post("/run", async (req, res) => {
   }
 
   try {
-    const job = await codeQueue.add("execute", {
-      language,
-      code,
-      input,
-    });
+    // Add job to queue
+    const job = await codeQueue.add("execute", { language, code, input });
 
-    res.json({ jobId: job.id });
+    // Wait until job is completed (or failed)
+    const result = await job.waitUntilFinished();
+
+    return res.json(result); // return output or error directly
   } catch (err) {
-    res.status(500).json({ error: "Failed to enqueue job" });
+    return res.status(500).json({ error: "Execution failed or timed out" });
   }
-});
-
-// ✅ Add /status/:id route
-app.get("/status/:id", async (req, res) => {
-  const job = await Job.fromId(codeQueue, req.params.id);
-  if (!job) return res.status(404).json({ error: "Job not found" });
-
-  const state = await job.getState();
-  const result = job.returnvalue || null;
-
-  res.json({ status: state, result });
 });
 
 // ✅ HTTPS server remains the same
