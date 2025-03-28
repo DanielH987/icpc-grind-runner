@@ -7,6 +7,20 @@ const { v4: uuidv4 } = require("uuid");
 
 const connection = new IORedis({ maxRetriesPerRequest: null });
 
+function detectErrorType(stderr) {
+    if (stderr.includes("SyntaxError")) return "SyntaxError";
+    if (stderr.includes("ReferenceError")) return "ReferenceError";
+    if (stderr.includes("NameError")) return "NameError";
+    if (stderr.toLowerCase().includes("error")) return "RuntimeError";
+    return "UnknownError";
+}
+
+function extractErrorMessage(stderr) {
+    const lines = stderr.trim().split("\n");
+    const lastLine = lines[lines.length - 1];
+    return lastLine || "Unknown error";
+}
+
 const worker = new Worker(
     "code-runner",
     async job => {
@@ -33,17 +47,51 @@ const worker = new Worker(
 
         const imageTag = `code-runner-${id}`;
 
-        // 🚀 Simply return this Promise — no need to manually call updateReturnValue()
+        const start = Date.now();
+
         return new Promise((resolve, reject) => {
-            exec(`docker build -f Dockerfiles/${dockerfile} -t ${imageTag} ${tempDir}`, (err, stdout, stderr) => {
-                if (err) return reject(stderr);
+            exec(`docker build -f Dockerfiles/${dockerfile} -t ${imageTag} ${tempDir}`, (err, buildOut, buildErr) => {
+                if (err) {
+                    fs.rmSync(tempDir, { recursive: true, force: true });
+                    return resolve({
+                        success: false,
+                        stdout: "",
+                        output: null,
+                        error: {
+                            type: "CompilationError",
+                            message: extractErrorMessage(buildErr),
+                            raw: buildErr
+                        },
+                        time: "0.00s"
+                    });
+                }
 
                 exec(`docker run --rm --memory=128m --cpus=".5" -i ${imageTag} < ${path.join(tempDir, "input.txt")}`, (err, stdout, stderr) => {
+                    const time = ((Date.now() - start) / 1000).toFixed(2) + "s";
+
                     exec(`docker rmi ${imageTag}`, () => { });
                     fs.rmSync(tempDir, { recursive: true, force: true });
 
-                    const result = err ? { error: stderr } : { output: stdout };
-                    return resolve(result);
+                    if (err) {
+                        return resolve({
+                            success: false,
+                            stdout: stdout || "",
+                            output: null,
+                            error: {
+                                type: detectErrorType(stderr),
+                                message: extractErrorMessage(stderr),
+                                raw: stderr
+                            },
+                            time
+                        });
+                    }
+
+                    return resolve({
+                        success: true,
+                        stdout: stdout || "",
+                        output: null,
+                        time
+                    });
                 });
             });
         });
