@@ -38,7 +38,7 @@ const worker = new Worker(
             exec(`docker build -f Dockerfiles/${dockerfile} -t ${imageTag} ${tempDir}`, (err, stdout, stderr) => {
                 if (err) return reject(stderr);
 
-                exec(`docker run --rm --memory=128m --cpus=".5" ${imageTag}`, (err, stdout, stderr) => {
+                exec(`docker run --rm --memory=128m --cpus=".5" -i ${imageTag} < ${path.join(tempDir, "input.txt")}`, (err, stdout, stderr) => {
                     exec(`docker rmi ${imageTag}`, () => { });
                     fs.rmSync(tempDir, { recursive: true, force: true });
 
