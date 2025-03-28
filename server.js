@@ -6,7 +6,7 @@ const rateLimit = require("express-rate-limit");
 const https = require("https");
 const { Job, QueueEvents } = require("bullmq");
 const codeQueue = require("./queue");
-const connection = require("./redis");
+const connection = require("./queue").connection;
 
 const app = express();
 app.use(express.json());
