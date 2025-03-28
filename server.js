@@ -31,6 +31,11 @@ app.use("/run", limiter);
 
 const queueEvents = new QueueEvents("code-runner", { connection: connectionOptions });
 
+(async () => {
+  await queueEvents.waitUntilReady();
+  console.log("✅ QueueEvents is ready");
+})();
+
 app.post("/run", async (req, res) => {
   const { language, code, input = "" } = req.body;
 
