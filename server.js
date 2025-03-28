@@ -1,10 +1,9 @@
 const express = require("express");
-const { v4: uuidv4 } = require("uuid");
 const fs = require("fs");
 const path = require("path");
 const rateLimit = require("express-rate-limit");
 const https = require("https");
-const { Job, QueueEvents } = require("bullmq");
+const { QueueEvents } = require("bullmq");
 const codeQueue = require("./queue");
 const connection = require("./queue").connection;
 
@@ -24,7 +23,7 @@ const limiter = rateLimit({
 });
 app.use("/run", limiter);
 
-const queueEvents = new QueueEvents("code-runner", { connection });
+const queueEvents = new QueueEvents("code-runner");
 
 app.post("/run", async (req, res) => {
   const { language, code, input = "" } = req.body;
