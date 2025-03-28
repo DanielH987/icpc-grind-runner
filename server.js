@@ -13,12 +13,6 @@ app.use(express.json());
 const PORT = process.env.PORT || 443;
 const ALLOWED_LANGUAGES = ["js", "python", "cpp"];
 
-const connectionOptions = {
-  host: "127.0.0.1",
-  port: 6379,
-  maxRetriesPerRequest: null,
-};
-
 // ✅ Rate limiter
 const limiter = rateLimit({
   windowMs: 60 * 1000,
@@ -29,7 +23,7 @@ const limiter = rateLimit({
 });
 app.use("/run", limiter);
 
-const queueEvents = new QueueEvents("code-runner", { connection: connectionOptions });
+const queueEvents = new QueueEvents("code-runner");
 
 (async () => {
   await queueEvents.waitUntilReady();
