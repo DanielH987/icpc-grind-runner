@@ -33,19 +33,16 @@ const worker = new Worker(
 
         const imageTag = `code-runner-${id}`;
 
+        // 🚀 Simply return this Promise — no need to manually call updateReturnValue()
         return new Promise((resolve, reject) => {
             exec(`docker build -f Dockerfiles/${dockerfile} -t ${imageTag} ${tempDir}`, (err, stdout, stderr) => {
-                if (err) {
-                    job.updateReturnValue({ error: stderr });
-                    return reject(stderr);
-                }
+                if (err) return reject(stderr);
 
                 exec(`docker run --rm --memory=128m --cpus=".5" ${imageTag}`, (err, stdout, stderr) => {
                     exec(`docker rmi ${imageTag}`, () => { });
                     fs.rmSync(tempDir, { recursive: true, force: true });
 
                     const result = err ? { error: stderr } : { output: stdout };
-                    job.updateReturnValue(result);
                     return resolve(result);
                 });
             });
@@ -55,7 +52,7 @@ const worker = new Worker(
 );
 
 worker.on("completed", (job, result) => {
-    console.log(`✅ Job ${job.id} completed`);
+    console.log(`✅ Job ${job.id} completed`, result);
 });
 
 worker.on("failed", (job, err) => {
