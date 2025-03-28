@@ -38,15 +38,16 @@ app.post("/run", async (req, res) => {
   }
 
   try {
-    const job = await codeQueue.add("execute", {
-      language,
-      code,
-      input,
-    });
+    console.log("🚀 Adding job to queue...");
+    const job = await codeQueue.add("execute", { language, code, input });
+    console.log(`📌 Job added: ${job.id}, waiting for completion...`);
 
-    const result = await job.waitUntilFinished(queueEvents, 15000); // 15s timeout
+    const result = await job.waitUntilFinished(queueEvents, 15000);
+    console.log(`✅ Job completed:`, result);
+
     res.json({ result });
   } catch (err) {
+    console.error("❌ Job failed:", err);
     res.status(500).json({ error: "Failed to execute job", detail: err.message });
   }
 });
