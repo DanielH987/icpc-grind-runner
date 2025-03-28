@@ -9,7 +9,7 @@ const { codeQueue, connection } = require("./queue");
 const app = express();
 app.use(express.json());
 
-const PORT = process.env.PORT || 443;
+const PORT = process.env.PORT || 3001;
 const ALLOWED_LANGUAGES = ["js", "python", "cpp"];
 
 // ✅ Rate limiter
