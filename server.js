@@ -4,8 +4,7 @@ const path = require("path");
 const rateLimit = require("express-rate-limit");
 const https = require("https");
 const { QueueEvents } = require("bullmq");
-const codeQueue = require("./queue");
-const connection = require("./queue").connection;
+const { codeQueue, connection } = require("./queue");
 
 const app = express();
 app.use(express.json());

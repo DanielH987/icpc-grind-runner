@@ -5,5 +5,7 @@ const connection = new IORedis({ maxRetriesPerRequest: null });
 
 const codeQueue = new Queue("code-runner", { connection });
 
-module.exports = codeQueue;
-module.exports.connection = connection;
+module.exports = {
+    codeQueue,
+    connection,
+};
