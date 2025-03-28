@@ -61,6 +61,6 @@ app.post("/run", async (req, res) => {
 //   console.log(`✅ Code Runner HTTPS server running on port ${PORT}`);
 // });
 
-app.listen(PORT, () => {
+app.listen(PORT, "127.0.0.1", () => {
   console.log(`✅ Code Runner server running on port ${PORT}`);
 });
