@@ -51,16 +51,16 @@ app.post("/run", async (req, res) => {
   }
 });
 
-// ✅ HTTPS server remains the same
-const httpsOptions = {
-  key: fs.readFileSync(path.join(__dirname, "selfsigned.key")),
-  cert: fs.readFileSync(path.join(__dirname, "selfsigned.crt")),
-};
+// // ✅ HTTPS server remains the same
+// const httpsOptions = {
+//   key: fs.readFileSync(path.join(__dirname, "selfsigned.key")),
+//   cert: fs.readFileSync(path.join(__dirname, "selfsigned.crt")),
+// };
 
-https.createServer(httpsOptions, app).listen(PORT, () => {
-  console.log(`✅ Code Runner HTTPS server running on port ${PORT}`);
-});
-
-// app.listen(3001, () => {
-//   console.log(`✅ Code Runner server running on port ${PORT}`);
+// https.createServer(httpsOptions, app).listen(PORT, () => {
+//   console.log(`✅ Code Runner HTTPS server running on port ${PORT}`);
 // });
+
+app.listen(PORT, () => {
+  console.log(`✅ Code Runner server running on port ${PORT}`);
+});
