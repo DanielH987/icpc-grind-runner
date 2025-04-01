@@ -21,6 +21,7 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 app.use("/run", limiter);
+app.use("/runSecret", limiter);
 
 const queueEvents = new QueueEvents("code-runner");
 
