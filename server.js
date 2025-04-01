@@ -51,6 +51,68 @@ app.post("/run", async (req, res) => {
   }
 });
 
+app.post("/runSecret", async (req, res) => {
+  const { language, code, problemId } = req.body;
+
+  if (!ALLOWED_LANGUAGES.includes(language)) {
+    return res.status(400).json({ error: "Unsupported language" });
+  }
+
+  const problemDir = path.join(__dirname, "secret", problemId);
+
+  try {
+    if (!fs.existsSync(problemDir)) {
+      return res.status(404).json({ error: "Problem not found." });
+    }
+
+    const files = fs.readdirSync(problemDir).filter(file => file.endsWith(".in"));
+
+    if (files.length === 0) {
+      return res.status(400).json({ error: "No test cases found for this problem." });
+    }
+
+    const results = [];
+    let passedCount = 0;
+
+    for (const file of files) {
+      const inputPath = path.join(problemDir, file);
+      const ansPath = path.join(problemDir, file.replace(".in", ".ans"));
+
+      const input = fs.readFileSync(inputPath, "utf-8").trim();
+      const expectedOutput = fs.existsSync(ansPath)
+        ? fs.readFileSync(ansPath, "utf-8").trim()
+        : null;
+
+      console.log(`🚀 Running test case: ${file}`);
+      const job = await codeQueue.add("execute", { language, code, input });
+      const output = await job.waitUntilFinished(queueEvents, 15000);
+
+      const actualOutput = output.result?.trim() || "";
+      const passed = expectedOutput !== null ? actualOutput === expectedOutput : null;
+
+      if (passed === true) passedCount++;
+
+      results.push({
+        testCase: file,
+        input,
+        output: actualOutput,
+        expected: expectedOutput,
+        passed,
+      });
+    }
+
+    res.json({
+      problemId,
+      totalCount: results.length,
+      passedCount,
+      results,
+    });
+  } catch (err) {
+    console.error("❌ Error during secret execution:", err);
+    res.status(500).json({ error: "Failed to run secret test cases", detail: err.message });
+  }
+});
+
 // // ✅ HTTPS server remains the same
 // const httpsOptions = {
 //   key: fs.readFileSync(path.join(__dirname, "selfsigned.key")),
