@@ -35,7 +35,7 @@ const worker = new Worker(
             filename = "main.js";
             dockerfile = "js.Dockerfile";
         } else if (language === "python") {
-            filename = "main.py";
+            filename = "user_code.py";
             dockerfile = "python.Dockerfile";
         } else {
             filename = "main.cpp";
@@ -45,8 +45,12 @@ const worker = new Worker(
         fs.writeFileSync(path.join(tempDir, filename), code);
         fs.writeFileSync(path.join(tempDir, "input.txt"), input);
 
-        const imageTag = `code-runner-${id}`;
+        if (language === "python") {
+            const templatePath = path.join(__dirname, "templates", "python", "main.py");
+            fs.copyFileSync(templatePath, path.join(tempDir, "main.py"));
+        }
 
+        const imageTag = `code-runner-${id}`;
         const start = Date.now();
 
         return new Promise((resolve, reject) => {
@@ -68,7 +72,6 @@ const worker = new Worker(
 
                 exec(`docker run --rm --memory=128m --cpus=".5" -i ${imageTag} < ${path.join(tempDir, "input.txt")}`, (err, stdout, stderr) => {
                     const time = ((Date.now() - start) / 1000).toFixed(2) + "s";
-
                     exec(`docker rmi ${imageTag}`, () => { });
                     fs.rmSync(tempDir, { recursive: true, force: true });
 
@@ -86,12 +89,27 @@ const worker = new Worker(
                         });
                     }
 
-                    return resolve({
-                        success: true,
-                        stdout: stdout || "",
-                        output: null,
-                        time
-                    });
+                    try {
+                        const parsed = JSON.parse(stdout);
+                        return resolve({
+                            success: true,
+                            stdout: parsed.stdout,
+                            output: parsed.output,
+                            time
+                        });
+                    } catch (e) {
+                        return resolve({
+                            success: false,
+                            stdout,
+                            output: null,
+                            error: {
+                                type: "ParseError",
+                                message: "Failed to parse output",
+                                raw: stdout
+                            },
+                            time
+                        });
+                    }
                 });
             });
         });
