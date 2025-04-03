@@ -46,9 +46,16 @@ const worker = new Worker(
         fs.writeFileSync(path.join(tempDir, "input.txt"), input);
 
         if (language === "python") {
-            const templatePath = path.join(__dirname, "templates", "python", "main.py");
+            const templatePath = path.join(
+                __dirname,
+                "templates",
+                "python",
+                job.name === "executeSecret" ? "run_secret.py" : "run.py"
+            );
             fs.copyFileSync(templatePath, path.join(tempDir, "main.py"));
         }
+
+        console.log(`job.name`, job.name);
 
         const imageTag = `code-runner-${id}`;
         const start = Date.now();

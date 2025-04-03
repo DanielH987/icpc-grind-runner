@@ -85,7 +85,7 @@ app.post("/runSecret", async (req, res) => {
         : null;
 
       console.log(`🚀 Running test case: ${file}`);
-      const job = await codeQueue.add("execute", { language, code, input });
+      const job = await codeQueue.add("executeSecret", { language, code, input });
       const output = await job.waitUntilFinished(queueEvents, 15000);
       console.log(`🔍 Test case output: ${JSON.stringify(output)}`);
       const actualOutput = output.result?.trim() || "";
