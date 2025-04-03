@@ -55,8 +55,6 @@ const worker = new Worker(
             fs.copyFileSync(templatePath, path.join(tempDir, "main.py"));
         }
 
-        console.log(`job.name`, job.name);
-
         const imageTag = `code-runner-${id}`;
         const start = Date.now();
 
