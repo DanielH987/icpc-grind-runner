@@ -21,7 +21,7 @@ def run():
     with redirect_stdout(f):
         # Load the user function dynamically
         func_name = extract_function_name("user_code.py")
-        import user_code
+        import user_code # type: ignore
         func = getattr(user_code, func_name)
 
         # Call the function with unpacked arguments
