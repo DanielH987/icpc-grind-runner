@@ -88,7 +88,7 @@ app.post("/runSecret", async (req, res) => {
       const job = await codeQueue.add("executeSecret", { language, code, input });
       const output = await job.waitUntilFinished(queueEvents, 15000);
       console.log(`🔍 Test case output:`, output);
-      const actualOutput = output.result?.trim() || "";
+      const actualOutput = String(output.output ?? "").trim();
       const passed = expectedOutput !== null ? actualOutput === expectedOutput : null;
 
       if (passed === true) passedCount++;
