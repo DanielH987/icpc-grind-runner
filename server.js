@@ -49,7 +49,7 @@ app.post("/run", async (req, res) => {
       console.log("🚀 Adding job to queue...");
       const job = await codeQueue.add("execute", { language, code, input });
       console.log(`📌 Job added: ${job.id}, waiting for completion...`);
-  
+
       const result = await job.waitUntilFinished(queueEvents, 15000);
       console.log(`✅ Job completed:`, result);
     }
@@ -115,7 +115,7 @@ app.post("/runSecret", async (req, res) => {
       problemId,
       totalCount: results.length,
       passedCount,
-      message: `${passedCount}/${results.length } testcases passed`,
+      message: `${passedCount}/${results.length} testcases passed`,
       results: results,
     });
   } catch (err) {
