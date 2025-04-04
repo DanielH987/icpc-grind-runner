@@ -37,13 +37,22 @@ app.post("/run", async (req, res) => {
     return res.status(400).json({ error: "Unsupported language" });
   }
 
+  let parsedInput;
   try {
-    console.log("🚀 Adding job to queue...");
-    const job = await codeQueue.add("execute", { language, code, input });
-    console.log(`📌 Job added: ${job.id}, waiting for completion...`);
+    parsedInput = JSON.parse(input);
+  } catch (parseErr) {
+    return res.status(400).json({ error: "Invalid JSON input" });
+  }
 
-    const result = await job.waitUntilFinished(queueEvents, 15000);
-    console.log(`✅ Job completed:`, result);
+  try {
+    for (const item of parsedInput) {
+      console.log("🚀 Adding job to queue...");
+      const job = await codeQueue.add("execute", { language, code, input });
+      console.log(`📌 Job added: ${job.id}, waiting for completion...`);
+  
+      const result = await job.waitUntilFinished(queueEvents, 15000);
+      console.log(`✅ Job completed:`, result);
+    }
 
     res.json({ result });
   } catch (err) {
