@@ -115,6 +115,8 @@ app.post("/runSecret", async (req, res) => {
       problemId,
       totalCount: results.length,
       passedCount,
+      message: `${passedCount}/${results.length } testcases passed`,
+      results: results,
     });
   } catch (err) {
     console.error("❌ Error during secret execution:", err);
