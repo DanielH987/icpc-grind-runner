@@ -76,7 +76,6 @@ app.post("/run", async (req, res) => {
       const passed = JSON.stringify(actualOutput) === JSON.stringify(expectedOutput);
 
       results.push({
-        testCase: item,
         expected: expectedOutput,
         output: actualOutput,
         passed,
