@@ -61,12 +61,12 @@ app.post("/run", async (req, res) => {
       const expectedOutput = parsedAnswers[i];
 
       console.log("🚀 Adding job to queue...");
+      console.log(`🌟 Job input: ${jJSON.stringify(item)}`);
       const job = await codeQueue.add("execute", {
         language,
         code,
         input: JSON.stringify(item),
       });
-      console.log(`🌟 Job input: ${jJSON.stringify(item)}`);
 
       console.log(`📌 Job added: ${job.id}, waiting for completion...`);
       const result = await job.waitUntilFinished(queueEvents, 15000);
