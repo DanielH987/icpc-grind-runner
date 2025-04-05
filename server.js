@@ -72,6 +72,19 @@ app.post("/run", async (req, res) => {
       const result = await job.waitUntilFinished(queueEvents, 15000);
       console.log(`✅ Job completed:`, result);
 
+      if (!result.success) {
+        return res.status(200).json({
+          error: {
+            message: result.error.message,
+            type: result.error.type,
+            raw: result.error.raw,
+          },
+          failedAt: i,
+          input: item,
+          time: result.time,
+        });
+      }
+
       const actualOutput = result.output;
       const passed = JSON.stringify(actualOutput) === JSON.stringify(expectedOutput);
 
