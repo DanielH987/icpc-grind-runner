@@ -64,7 +64,7 @@ app.post("/run", async (req, res) => {
       const job = await codeQueue.add("execute", {
         language,
         code,
-        input: item
+        input,
       });
 
       console.log(`📌 Job added: ${job.id}, waiting for completion...`);
