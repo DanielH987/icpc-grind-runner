@@ -38,6 +38,7 @@ app.post("/run", async (req, res) => {
   }
 
   let parsedInput, parsedAnswers;
+  console.log("🚀 Parsing input and answers...", input, answers);
   try {
     parsedInput = JSON.parse(input);
     parsedAnswers = JSON.parse(answers);
