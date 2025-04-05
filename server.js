@@ -38,7 +38,6 @@ app.post("/run", async (req, res) => {
   }
 
   let parsedInput, parsedAnswers;
-  console.log("🚀 Parsing input and answers...", input, answers);
   try {
     parsedInput = JSON.parse(input);
     parsedAnswers = JSON.parse(answers);
@@ -65,7 +64,7 @@ app.post("/run", async (req, res) => {
       const job = await codeQueue.add("execute", {
         language,
         code,
-        item
+        input: item
       });
 
       console.log(`📌 Job added: ${job.id}, waiting for completion...`);
