@@ -79,8 +79,6 @@ app.post("/run", async (req, res) => {
             type: result.error.type,
             raw: result.error.raw,
           },
-          failedAt: i,
-          input: item,
           time: result.time,
         });
       }
