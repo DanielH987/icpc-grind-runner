@@ -79,7 +79,8 @@ app.post("/run", async (req, res) => {
         testCase: item,
         expected: expectedOutput,
         output: actualOutput,
-        passed
+        passed,
+        result,
       });
     }
 
