@@ -66,6 +66,7 @@ app.post("/run", async (req, res) => {
         code,
         input: JSON.stringify(item),
       });
+      console.log(`🌟 Job input: ${jJSON.stringify(item)}`);
 
       console.log(`📌 Job added: ${job.id}, waiting for completion...`);
       const result = await job.waitUntilFinished(queueEvents, 15000);
