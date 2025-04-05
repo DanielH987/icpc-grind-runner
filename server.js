@@ -31,30 +31,58 @@ const queueEvents = new QueueEvents("code-runner");
 })();
 
 app.post("/run", async (req, res) => {
-  const { language, code, input = "" } = req.body;
+  const { language, code, input = "", answers = "" } = req.body;
 
   if (!ALLOWED_LANGUAGES.includes(language)) {
     return res.status(400).json({ error: "Unsupported language" });
   }
 
-  let parsedInput;
+  let parsedInput, parsedAnswers;
   try {
     parsedInput = JSON.parse(input);
+    parsedAnswers = JSON.parse(answers);
   } catch (parseErr) {
-    return res.status(400).json({ error: "Invalid JSON input" });
+    return res.status(400).json({ error: "Invalid JSON input or answers" });
+  }
+
+  if (!Array.isArray(parsedInput) || !Array.isArray(parsedAnswers)) {
+    return res.status(400).json({ error: "Input and answers must be arrays" });
+  }
+
+  if (parsedInput.length !== parsedAnswers.length) {
+    return res.status(400).json({ error: "Input and answers length mismatch" });
   }
 
   try {
-    for (const item of parsedInput) {
-      console.log("🚀 Adding job to queue...");
-      const job = await codeQueue.add("execute", { language, code, input });
-      console.log(`📌 Job added: ${job.id}, waiting for completion...`);
+    const results = [];
 
+    for (let i = 0; i < parsedInput.length; i++) {
+      const item = parsedInput[i];
+      const expectedOutput = parsedAnswers[i];
+
+      console.log("🚀 Adding job to queue...");
+      const job = await codeQueue.add("execute", {
+        language,
+        code,
+        item
+      });
+
+      console.log(`📌 Job added: ${job.id}, waiting for completion...`);
       const result = await job.waitUntilFinished(queueEvents, 15000);
       console.log(`✅ Job completed:`, result);
+
+      const actualOutput = result.output;
+      const passed = JSON.stringify(actualOutput) === JSON.stringify(expectedOutput);
+
+      results.push({
+        testCase: item,
+        expected: expectedOutput,
+        output: actualOutput,
+        passed
+      });
     }
 
-    res.json({ result });
+    res.json({ results });
   } catch (err) {
     console.error("❌ Job failed:", err);
     res.status(500).json({ error: "Failed to execute job", detail: err.message });
