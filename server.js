@@ -155,6 +155,7 @@ app.post("/runSecret", async (req, res) => {
       problemId,
       totalCount: results.length,
       passedCount,
+      passed: passedCount === results.length,
       message: `${passedCount}/${results.length} testcases passed`,
       results: results,
     });
