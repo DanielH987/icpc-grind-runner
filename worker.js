@@ -17,8 +17,14 @@ function detectErrorType(stderr) {
 
 function extractErrorMessage(stderr) {
     const lines = stderr.trim().split("\n");
-    const lastLine = lines[lines.length - 1];
-    return lastLine || "Unknown error";
+
+    const userCodeLineIndex = lines.findIndex(line => line.includes("user_code.py"));
+
+    if (userCodeLineIndex !== -1) {
+        return lines.slice(userCodeLineIndex).join("\n");
+    }
+
+    return lines[lines.length - 1] || "Unknown error";
 }
 
 const worker = new Worker(
