@@ -142,14 +142,14 @@ app.post("/runSecret", async (req, res) => {
 
       if (passed === true) passedCount++;
 
-      if (!result.success) {
+      if (!output.success) {
         return res.status(200).json({
           error: {
-            message: result.error.message,
-            type: result.error.type,
-            raw: result.error.raw,
+            message: output.error.message,
+            type: output.error.type,
+            raw: output.error.raw,
           },
-          time: result.time,
+          time: output.time,
         });
       }
 
