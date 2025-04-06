@@ -17,11 +17,20 @@ function detectErrorType(stderr) {
 
 function extractErrorMessage(stderr) {
     const lines = stderr.trim().split("\n");
+    const userCodeIndex = lines.findIndex(line => line.includes("user_code.py"));
 
-    const userCodeLineIndex = lines.findIndex(line => line.includes("user_code.py"));
+    if (userCodeIndex !== -1) {
+        const errorLines = [];
 
-    if (userCodeLineIndex !== -1) {
-        return lines.slice(userCodeLineIndex).join("\n");
+        for (let i = userCodeIndex; i < lines.length; i++) {
+            errorLines.push(lines[i]);
+
+            if (/^\w*Error:/.test(lines[i])) {
+                break;
+            }
+        }
+
+        return errorLines.join("\n");
     }
 
     return lines[lines.length - 1] || "Unknown error";
