@@ -142,6 +142,17 @@ app.post("/runSecret", async (req, res) => {
 
       if (passed === true) passedCount++;
 
+      if (!result.success) {
+        return res.status(200).json({
+          error: {
+            message: result.error.message,
+            type: result.error.type,
+            raw: result.error.raw,
+          },
+          time: result.time,
+        });
+      }
+
       results.push({
         testCase: file,
         input,
