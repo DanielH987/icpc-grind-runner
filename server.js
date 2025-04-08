@@ -126,7 +126,7 @@ app.post("/runSecret", async (req, res) => {
 
     for (const file of files) {
       const inputPath = path.join(problemDir, file);
-      const ansPath = path.join(problemDir, file.replace(".in", ".ans"));
+      const ansPath = path.join(problemDir, file.replace(".json", ".ans"));
 
       const input = fs.readFileSync(inputPath, "utf-8").trim();
       const expectedOutput = fs.existsSync(ansPath)
@@ -134,7 +134,7 @@ app.post("/runSecret", async (req, res) => {
         : null;
 
       console.log(`🚀 Running test case: ${file}`);
-      const job = await codeQueue.add("executeSecret", { language, code, input });
+      const job = await codeQueue.add("executeSecret", { language, code, input: JSON.stringify(input) });
       const output = await job.waitUntilFinished(queueEvents, 15000);
       console.log(`🔍 Test case output:`, output);
       const actualOutput = String(output.output ?? "").trim();

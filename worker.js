@@ -65,7 +65,7 @@ const worker = new Worker(
                 __dirname,
                 "templates",
                 "python",
-                job.name === "executeSecret" ? "run_secret.py" : "run.py"
+                "run.py"
             );
             fs.copyFileSync(templatePath, path.join(tempDir, "main.py"));
         }
