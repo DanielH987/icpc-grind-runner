@@ -1,3 +1,5 @@
+### SCRIPT NOT IN USE ANYMORE ###
+
 import sys
 import json
 import io
