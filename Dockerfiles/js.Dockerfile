@@ -1,3 +1,4 @@
+# js.Dockerfile
 FROM node:alpine
 
 # Create a non-root user
@@ -5,8 +6,10 @@ RUN addgroup -S appgroup && adduser -S appuser -G appgroup
 
 WORKDIR /app
 
-COPY main.js /app/main.js
+# Copy both user code and runner
+COPY main.js .
+COPY run.js .
 
 USER appuser
 
-CMD ["node", "/app/main.js"]
+CMD ["node", "run.js"]

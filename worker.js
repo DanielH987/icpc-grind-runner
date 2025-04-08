@@ -61,13 +61,11 @@ const worker = new Worker(
         fs.writeFileSync(path.join(tempDir, "input.txt"), input);
 
         if (language === "python") {
-            const templatePath = path.join(
-                __dirname,
-                "templates",
-                "python",
-                "run.py"
-            );
-            fs.copyFileSync(templatePath, path.join(tempDir, "main.py"));
+            fs.copyFileSync(path.join(__dirname, "templates/python/run.py"), path.join(tempDir, "main.py"));
+        } else if (language === "js") {
+            fs.copyFileSync(path.join(__dirname, "templates/js/run.js"), path.join(tempDir, "run.js"));
+        } else if (language === "cpp") {
+            fs.copyFileSync(path.join(__dirname, "templates/cpp/run.cpp"), path.join(tempDir, "run.cpp"));
         }
 
         const imageTag = `code-runner-${id}`;
