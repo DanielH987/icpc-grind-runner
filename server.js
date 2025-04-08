@@ -115,7 +115,7 @@ app.post("/runSecret", async (req, res) => {
       return res.status(404).json({ error: "Problem not found." });
     }
 
-    const files = fs.readdirSync(problemDir).filter(file => file.endsWith(".in"));
+    const files = fs.readdirSync(problemDir).filter(file => file.endsWith(".json"));
 
     if (files.length === 0) {
       return res.status(400).json({ error: "No test cases found for this problem." });
