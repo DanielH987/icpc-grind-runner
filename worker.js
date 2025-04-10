@@ -7,6 +7,41 @@ const { v4: uuidv4 } = require("uuid");
 
 const connection = new IORedis({ maxRetriesPerRequest: null });
 
+const extractCppFunctionName = (code) => {
+    const match = code.match(/\b(int|void|double|float|string)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(([^)]*)\)/);
+    if (!match) throw new Error("Could not extract function signature from C++ code");
+
+    const returnType = match[1];
+    const funcName = match[2];
+    const rawArgs = match[3]
+        .split(',')
+        .map(arg => arg.trim())
+        .filter(Boolean);
+
+    // Extract types (e.g., "string s" -> "string")
+    const argTypes = rawArgs.map(arg => {
+        const tokens = arg.split(/\s+/);
+        return tokens[0]; // e.g., 'string' or 'int'
+    });
+
+    return { returnType, funcName, argTypes };
+};
+
+const renderCppRunnerTemplate = (template, funcName, argTypes) => {
+    const funcDeclArgs = argTypes.map((type, i) =>
+        `${type === "string" ? "std::string" : type} a${i}`
+    ).join(", ");
+
+    const funcCallArgs = argTypes.map((type, i) =>
+        type === "string" ? `args[${i}].get<std::string>()` : `args[${i}]`
+    ).join(", ");
+
+    return template
+        .replace(/{{FUNC_NAME}}/g, funcName)
+        .replace(/{{FUNC_DECL_ARGS}}/g, funcDeclArgs)
+        .replace(/{{FUNC_CALL_ARGS}}/g, funcCallArgs);
+};
+
 function detectErrorType(stderr) {
     if (stderr.includes("SyntaxError")) return "SyntaxError";
     if (stderr.includes("ReferenceError")) return "ReferenceError";
@@ -46,27 +81,33 @@ const worker = new Worker(
         fs.mkdirSync(tempDir, { recursive: true });
 
         let filename, dockerfile;
+
         if (language === "js") {
             filename = "main.js";
             dockerfile = "js.Dockerfile";
+            fs.writeFileSync(path.join(tempDir, filename), code);
+            fs.copyFileSync(path.join(__dirname, "templates/js/run.js"), path.join(tempDir, "run.js"));
+
         } else if (language === "python") {
             filename = "user_code.py";
             dockerfile = "python.Dockerfile";
-        } else {
+            fs.writeFileSync(path.join(tempDir, filename), code);
+            fs.copyFileSync(path.join(__dirname, "templates/python/run.py"), path.join(tempDir, "main.py"));
+
+        } else if (language === "cpp") {
             filename = "main.cpp";
             dockerfile = "cpp.Dockerfile";
-        }
 
-        fs.writeFileSync(path.join(tempDir, filename), code);
+            const { funcName, argTypes } = extractCppFunctionName(code);
+            const templateCpp = fs.readFileSync(path.join(__dirname, "templates/cpp/run.cpp"), "utf-8");
+            const renderedRunCpp = renderCppRunnerTemplate(templateCpp, funcName, argTypes);
+
+            fs.writeFileSync(path.join(tempDir, "main.cpp"), code);
+            fs.writeFileSync(path.join(tempDir, "run.cpp"), renderedRunCpp);
+        }
+        
+        // console.log("User input:\n", input);
         fs.writeFileSync(path.join(tempDir, "input.txt"), input);
-
-        if (language === "python") {
-            fs.copyFileSync(path.join(__dirname, "templates/python/run.py"), path.join(tempDir, "main.py"));
-        } else if (language === "js") {
-            fs.copyFileSync(path.join(__dirname, "templates/js/run.js"), path.join(tempDir, "run.js"));
-        } else if (language === "cpp") {
-            fs.copyFileSync(path.join(__dirname, "templates/cpp/run.cpp"), path.join(tempDir, "run.cpp"));
-        }
 
         const imageTag = `code-runner-${id}`;
         const start = Date.now();
