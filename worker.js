@@ -87,6 +87,9 @@ const worker = new Worker(
             console.log("Generated run.cpp:\n", renderedRunCpp);
 
             fs.writeFileSync(path.join(tempDir, "main.cpp"), code);
+
+            console.log("User main.cpp:\n", code);
+
             fs.writeFileSync(path.join(tempDir, "run.cpp"), renderedRunCpp);
         }
 
