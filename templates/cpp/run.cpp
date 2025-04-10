@@ -4,10 +4,9 @@
 #include <nlohmann/json.hpp>
 
 // Declare the user function
-int{{FUNC_NAME}}({{FUNC_DECL_ARGS}});
+int {{FUNC_NAME}}({{FUNC_DECL_ARGS}});
 
-int main()
-{
+int main() {
     using json = nlohmann::json;
 
     std::string inputLine;
@@ -15,9 +14,8 @@ int main()
     json args = json::parse(inputLine);
 
     std::stringstream buffer;
-    std::streambuf *old = std::cout.rdbuf(buffer.rdbuf());
+    std::streambuf* old = std::cout.rdbuf(buffer.rdbuf());
 
-    // Call the user function
     int result = {{FUNC_NAME}}({{FUNC_CALL_ARGS}});
 
     std::cout.rdbuf(old);
