@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <string>
 #include <nlohmann/json.hpp>
 
 // Declare the user function

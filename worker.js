@@ -8,16 +8,31 @@ const { v4: uuidv4 } = require("uuid");
 const connection = new IORedis({ maxRetriesPerRequest: null });
 
 const extractCppFunctionName = (code) => {
-    const match = code.match(/int\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(([^)]*)\)/);
-    if (!match) throw new Error("Could not extract function name from C++ code");
-    const funcName = match[1];
-    const args = match[2].split(',').map(arg => arg.trim()).filter(Boolean);
-    return { funcName, args };
+    const match = code.match(/\b(int|void|double|float|string)\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(([^)]*)\)/);
+    if (!match) throw new Error("Could not extract function signature from C++ code");
+
+    const returnType = match[1];
+    const funcName = match[2];
+    const rawArgs = match[3]
+        .split(',')
+        .map(arg => arg.trim())
+        .filter(Boolean);
+
+    // Extract types (e.g., "string s" -> "string")
+    const argTypes = rawArgs.map(arg => {
+        const tokens = arg.split(/\s+/);
+        return tokens[0]; // e.g., 'string' or 'int'
+    });
+
+    return { returnType, funcName, argTypes };
 };
 
-const renderCppRunnerTemplate = (template, funcName, args) => {
-    const funcDeclArgs = args.map((_, i) => `int a${i}`).join(", ");
-    const funcCallArgs = args.map((_, i) => `args[${i}]`).join(", ");
+const renderCppRunnerTemplate = (template, funcName, argTypes) => {
+    const funcDeclArgs = argTypes.map((type, i) => `${type} a${i}`).join(", ");
+    const funcCallArgs = argTypes.map((type, i) =>
+        type === "string" ? `args[${i}].get<std::string>()` : `args[${i}]`
+    ).join(", ");
+
     return template
         .replace(/{{FUNC_NAME}}/g, funcName)
         .replace(/{{FUNC_DECL_ARGS}}/g, funcDeclArgs)
