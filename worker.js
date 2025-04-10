@@ -84,6 +84,8 @@ const worker = new Worker(
             const templateCpp = fs.readFileSync(path.join(__dirname, "templates/cpp/run.cpp"), "utf-8");
             const renderedRunCpp = renderCppRunnerTemplate(templateCpp, funcName, cppArgs);
 
+            console.log("Generated run.cpp:\n", renderedRunCpp);
+
             fs.writeFileSync(path.join(tempDir, "main.cpp"), code);
             fs.writeFileSync(path.join(tempDir, "run.cpp"), renderedRunCpp);
         }
