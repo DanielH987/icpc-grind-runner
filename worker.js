@@ -102,11 +102,9 @@ const worker = new Worker(
             const templateCpp = fs.readFileSync(path.join(__dirname, "templates/cpp/run.cpp"), "utf-8");
             const renderedRunCpp = renderCppRunnerTemplate(templateCpp, funcName, argTypes);
 
-            console.log("Generated run.cpp:\n", renderedRunCpp);
-
             fs.writeFileSync(path.join(tempDir, "main.cpp"), code);
 
-            console.log("User main.cpp:\n", code);
+            console.log("User main.cpp input:\n", input);
 
             fs.writeFileSync(path.join(tempDir, "run.cpp"), renderedRunCpp);
         }
