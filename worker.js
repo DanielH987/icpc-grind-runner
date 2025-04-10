@@ -106,7 +106,7 @@ const worker = new Worker(
             fs.writeFileSync(path.join(tempDir, "run.cpp"), renderedRunCpp);
         }
         
-        console.log("User input:\n", input);
+        // console.log("User input:\n", input);
         fs.writeFileSync(path.join(tempDir, "input.txt"), input);
 
         const imageTag = `code-runner-${id}`;
