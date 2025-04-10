@@ -103,12 +103,10 @@ const worker = new Worker(
             const renderedRunCpp = renderCppRunnerTemplate(templateCpp, funcName, argTypes);
 
             fs.writeFileSync(path.join(tempDir, "main.cpp"), code);
-
-            console.log("User main.cpp input:\n", input);
-
             fs.writeFileSync(path.join(tempDir, "run.cpp"), renderedRunCpp);
         }
-
+        
+        console.log("User input:\n", input);
         fs.writeFileSync(path.join(tempDir, "input.txt"), input);
 
         const imageTag = `code-runner-${id}`;
