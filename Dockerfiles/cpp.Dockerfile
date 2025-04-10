@@ -1,21 +1,24 @@
-# cpp.Dockerfile
+# Dockerfiles/cpp.Dockerfile
 FROM gcc:latest
 
-# Optional: Create a non-root user for security
+# Create a non-root user (optional but good practice)
 RUN useradd -m appuser
 
-# Install nlohmann/json (needed for JSON parsing)
+# Install JSON library
 RUN apt-get update && apt-get install -y nlohmann-json3-dev
 
 WORKDIR /app
 
-# Copy both user code and the runner
+# Copy code files
 COPY main.cpp .
 COPY run.cpp .
+COPY input.txt .
 
-# Compile the runner (which includes user code)
-RUN g++ run.cpp -o main -std=c++17
+# Compile both user and runner code
+RUN g++ main.cpp run.cpp -o main -std=c++17
 
+# Run as non-root
 USER appuser
 
+# Run program with stdin redirected
 CMD ["./main"]

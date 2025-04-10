@@ -1,34 +1,31 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <nlohmann/json.hpp>
-#include "main.cpp" // contains the user's function definition
 
-using json = nlohmann::json;
-using namespace std;
+// Declare the user function
+int{{FUNC_NAME}}({{FUNC_DECL_ARGS}});
 
-// Modify this to match the expected function signature
-json callFunction(json args) {
-    int a = args[0];
-    int b = args[1];
-    int result = add(a, b); // assuming user's function is int add(int, int)
-    return result;
-}
+int main()
+{
+    using json = nlohmann::json;
 
-int main() {
-    try {
-        string input((istreambuf_iterator<char>(cin)), istreambuf_iterator<char>());
-        json args = json::parse(input);
-        json result = {
-            {"stdout", ""},
-            {"output", callFunction(args)}
-        };
-        cout << result.dump() << endl;
-    } catch (const exception& e) {
-        json err = {
-            {"stdout", ""},
-            {"output", nullptr},
-            {"error", e.what()}
-        };
-        cout << err.dump() << endl;
-    }
+    std::string inputLine;
+    std::getline(std::cin, inputLine);
+    json args = json::parse(inputLine);
+
+    std::stringstream buffer;
+    std::streambuf *old = std::cout.rdbuf(buffer.rdbuf());
+
+    // Call the user function
+    int result = {{FUNC_NAME}}({{FUNC_CALL_ARGS}});
+
+    std::cout.rdbuf(old);
+
+    json output;
+    output["stdout"] = buffer.str();
+    output["output"] = result;
+    std::cout << output.dump() << std::endl;
+
     return 0;
 }

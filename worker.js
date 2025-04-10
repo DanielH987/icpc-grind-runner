@@ -7,6 +7,23 @@ const { v4: uuidv4 } = require("uuid");
 
 const connection = new IORedis({ maxRetriesPerRequest: null });
 
+const extractCppFunctionName = (code) => {
+    const match = code.match(/int\s+([a-zA-Z_][a-zA-Z0-9_]*)\s*\(([^)]*)\)/);
+    if (!match) throw new Error("Could not extract function name from C++ code");
+    const funcName = match[1];
+    const args = match[2].split(',').map(arg => arg.trim()).filter(Boolean);
+    return { funcName, args };
+};
+
+const renderCppRunnerTemplate = (template, funcName, args) => {
+    const funcDeclArgs = args.map((_, i) => `int a${i}`).join(", ");
+    const funcCallArgs = args.map((_, i) => `args[${i}]`).join(", ");
+    return template
+        .replace(/{{FUNC_NAME}}/g, funcName)
+        .replace(/{{FUNC_DECL_ARGS}}/g, funcDeclArgs)
+        .replace(/{{FUNC_CALL_ARGS}}/g, funcCallArgs);
+};
+
 function detectErrorType(stderr) {
     if (stderr.includes("SyntaxError")) return "SyntaxError";
     if (stderr.includes("ReferenceError")) return "ReferenceError";
@@ -46,27 +63,32 @@ const worker = new Worker(
         fs.mkdirSync(tempDir, { recursive: true });
 
         let filename, dockerfile;
+
         if (language === "js") {
             filename = "main.js";
             dockerfile = "js.Dockerfile";
+            fs.writeFileSync(path.join(tempDir, filename), code);
+            fs.copyFileSync(path.join(__dirname, "templates/js/run.js"), path.join(tempDir, "run.js"));
+
         } else if (language === "python") {
             filename = "user_code.py";
             dockerfile = "python.Dockerfile";
-        } else {
+            fs.writeFileSync(path.join(tempDir, filename), code);
+            fs.copyFileSync(path.join(__dirname, "templates/python/run.py"), path.join(tempDir, "main.py"));
+
+        } else if (language === "cpp") {
             filename = "main.cpp";
             dockerfile = "cpp.Dockerfile";
+
+            const { funcName, args: cppArgs } = extractCppFunctionName(code);
+            const templateCpp = fs.readFileSync(path.join(__dirname, "templates/cpp/run.cpp"), "utf-8");
+            const renderedRunCpp = renderCppRunnerTemplate(templateCpp, funcName, cppArgs);
+
+            fs.writeFileSync(path.join(tempDir, "main.cpp"), code);
+            fs.writeFileSync(path.join(tempDir, "run.cpp"), renderedRunCpp);
         }
 
-        fs.writeFileSync(path.join(tempDir, filename), code);
         fs.writeFileSync(path.join(tempDir, "input.txt"), input);
-
-        if (language === "python") {
-            fs.copyFileSync(path.join(__dirname, "templates/python/run.py"), path.join(tempDir, "main.py"));
-        } else if (language === "js") {
-            fs.copyFileSync(path.join(__dirname, "templates/js/run.js"), path.join(tempDir, "run.js"));
-        } else if (language === "cpp") {
-            fs.copyFileSync(path.join(__dirname, "templates/cpp/run.cpp"), path.join(tempDir, "run.cpp"));
-        }
 
         const imageTag = `code-runner-${id}`;
         const start = Date.now();
