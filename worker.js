@@ -95,9 +95,9 @@ const worker = new Worker(
             filename = "main.cpp";
             dockerfile = "cpp.Dockerfile";
 
-            const { funcName, args: cppArgs } = extractCppFunctionName(code);
+            const { funcName, argTypes } = extractCppFunctionName(code);
             const templateCpp = fs.readFileSync(path.join(__dirname, "templates/cpp/run.cpp"), "utf-8");
-            const renderedRunCpp = renderCppRunnerTemplate(templateCpp, funcName, cppArgs);
+            const renderedRunCpp = renderCppRunnerTemplate(templateCpp, funcName, argTypes);
 
             console.log("Generated run.cpp:\n", renderedRunCpp);
 
