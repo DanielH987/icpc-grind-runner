@@ -28,7 +28,10 @@ const extractCppFunctionName = (code) => {
 };
 
 const renderCppRunnerTemplate = (template, funcName, argTypes) => {
-    const funcDeclArgs = argTypes.map((type, i) => `${type} a${i}`).join(", ");
+    const funcDeclArgs = argTypes.map((type, i) =>
+        `${type === "string" ? "std::string" : type} a${i}`
+    ).join(", ");
+
     const funcCallArgs = argTypes.map((type, i) =>
         type === "string" ? `args[${i}].get<std::string>()` : `args[${i}]`
     ).join(", ");
