@@ -66,7 +66,6 @@ app.post("/run", async (req, res) => {
         language,
         code,
         input: JSON.stringify(item),
-        stripPrints: true,
       });
 
       console.log(`📌 Job added: ${job.id}, waiting for completion...`);
