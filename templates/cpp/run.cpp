@@ -16,6 +16,8 @@ int main() {
     std::getline(std::cin, inputLine);
     json args = json::parse(inputLine);
 
+    // {{TEMP_VARS}}
+    
     std::stringstream buffer;
     std::streambuf* old = std::cout.rdbuf(buffer.rdbuf());
 

@@ -19,11 +19,11 @@ const extractCppFunctionName = (code) => {
         .filter(Boolean);
 
     const argTypes = rawArgs.map(arg => {
-        // Normalize vector<int>& or vector<int> to "vector<int>"
-        if (/vector\s*<\s*int\s*>\s*&?/.test(arg)) return "vector<int>";
-        if (/string\s*&?/.test(arg)) return "string";
+        if (/vector\s*<\s*int\s*>\s*&/.test(arg)) return "vector<int>&";
+        if (/vector\s*<\s*int\s*>/.test(arg)) return "vector<int>";
+        if (/string\s*&/.test(arg)) return "string&";
+        if (/string/.test(arg)) return "string";
 
-        // Fallback to first word (e.g., "int", "float")
         const tokens = arg.split(/\s+/);
         return tokens[0];
     });
@@ -34,20 +34,32 @@ const extractCppFunctionName = (code) => {
 const renderCppRunnerTemplate = (template, funcName, argTypes) => {
     const funcDeclArgs = argTypes.map((type, i) => {
         if (type === "string") return `std::string a${i}`;
-        if (type === "vector<int>") return `std::vector<int> a${i}`; // pass by value
+        if (type === "string&") return `std::string& a${i}`;
+        if (type === "vector<int>") return `std::vector<int> a${i}`;
+        if (type === "vector<int>&") return `std::vector<int>& a${i}`;
         return `${type} a${i}`;
     }).join(", ");
 
     const funcCallArgs = argTypes.map((type, i) => {
-        if (type === "string") return `args[${i}].get<std::string>()`;
-        if (type === "vector<int>") return `args[${i}].get<std::vector<int>>()`; // explicit get
+        if (type === "string" || type === "string&") return `args[${i}].get<std::string>()`;
+        if (type === "vector<int>") return `args[${i}].get<std::vector<int>>()`;
+        if (type === "vector<int>&") return `(temp${i})`; // use a variable
         return `args[${i}]`;
     }).join(", ");
+
+    // Build pre-call temp declarations for references
+    const tempVars = argTypes.map((type, i) => {
+        if (type === "vector<int>&") {
+            return `std::vector<int> temp${i} = args[${i}].get<std::vector<int>>();`;
+        }
+        return null;
+    }).filter(Boolean).join("\n    ");
 
     return template
         .replace(/{{FUNC_NAME}}/g, funcName)
         .replace(/{{FUNC_DECL_ARGS}}/g, funcDeclArgs)
-        .replace(/{{FUNC_CALL_ARGS}}/g, funcCallArgs);
+        .replace(/{{FUNC_CALL_ARGS}}/g, funcCallArgs)
+        .replace("// {{TEMP_VARS}}", tempVars); // add this line in the template
 };
 
 function detectErrorType(stderr) {
