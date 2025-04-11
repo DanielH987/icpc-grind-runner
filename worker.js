@@ -82,7 +82,7 @@ const worker = new Worker(
 
         let filename, dockerfile;
 
-        if (language === "js") {
+        if (language === "javaScript") {
             filename = "main.js";
             dockerfile = "js.Dockerfile";
             fs.writeFileSync(path.join(tempDir, filename), code);
