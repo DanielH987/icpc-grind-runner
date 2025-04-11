@@ -18,23 +18,31 @@ const extractCppFunctionName = (code) => {
         .map(arg => arg.trim())
         .filter(Boolean);
 
-    // Extract types (e.g., "string s" -> "string")
     const argTypes = rawArgs.map(arg => {
+        // Normalize vector<int>& or vector<int> to "vector<int>"
+        if (/vector\s*<\s*int\s*>\s*&?/.test(arg)) return "vector<int>";
+        if (/string\s*&?/.test(arg)) return "string";
+
+        // Fallback to first word (e.g., "int", "float")
         const tokens = arg.split(/\s+/);
-        return tokens[0]; // e.g., 'string' or 'int'
+        return tokens[0];
     });
 
     return { returnType, funcName, argTypes };
 };
 
 const renderCppRunnerTemplate = (template, funcName, argTypes) => {
-    const funcDeclArgs = argTypes.map((type, i) =>
-        `${type === "string" ? "std::string" : type} a${i}`
-    ).join(", ");
+    const funcDeclArgs = argTypes.map((type, i) => {
+        if (type === "string") return `std::string a${i}`;
+        if (type === "vector<int>") return `std::vector<int> a${i}`; // pass by value
+        return `${type} a${i}`;
+    }).join(", ");
 
-    const funcCallArgs = argTypes.map((type, i) =>
-        type === "string" ? `args[${i}].get<std::string>()` : `args[${i}]`
-    ).join(", ");
+    const funcCallArgs = argTypes.map((type, i) => {
+        if (type === "string") return `args[${i}].get<std::string>()`;
+        if (type === "vector<int>") return `args[${i}].get<std::vector<int>>()`; // explicit get
+        return `args[${i}]`;
+    }).join(", ");
 
     return template
         .replace(/{{FUNC_NAME}}/g, funcName)
