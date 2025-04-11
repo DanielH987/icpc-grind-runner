@@ -74,7 +74,24 @@ function extractErrorMessage(stderr) {
 const worker = new Worker(
     "code-runner",
     async job => {
-        const { language, code, input } = job.data;
+        const { language, code, input, stripPrints = false } = job.data;
+
+        let finalCode = code;
+
+        if (stripPrints) {
+            if (language === "python") {
+                // Remove Python print() statements
+                finalCode = code.replace(/^\s*print\(.*?\)\s*$/gm, "");
+            } else if (language === "javaScript") {
+                // Remove JS console.log() statements
+                finalCode = code.replace(/^\s*console\.log\(.*?\)\s*;?\s*$/gm, "");
+            } else if (language === "cpp") {
+                // Remove C++ std::cout << ...; or printf(...) statements
+                finalCode = code
+                    .replace(/^\s*std::cout\s*<<.*?;\s*$/gm, "")
+                    .replace(/^\s*printf\(.*?\);\s*$/gm, "");
+            }
+        }
 
         const id = uuidv4();
         const tempDir = path.join(__dirname, "temp", id);
@@ -85,13 +102,13 @@ const worker = new Worker(
         if (language === "javaScript") {
             filename = "main.js";
             dockerfile = "js.Dockerfile";
-            fs.writeFileSync(path.join(tempDir, filename), code);
+            fs.writeFileSync(path.join(tempDir, filename), finalCode);
             fs.copyFileSync(path.join(__dirname, "templates/js/run.js"), path.join(tempDir, "run.js"));
 
         } else if (language === "python") {
             filename = "user_code.py";
             dockerfile = "python.Dockerfile";
-            fs.writeFileSync(path.join(tempDir, filename), code);
+            fs.writeFileSync(path.join(tempDir, filename), finalCode);
             fs.copyFileSync(path.join(__dirname, "templates/python/run.py"), path.join(tempDir, "main.py"));
 
         } else if (language === "cpp") {
@@ -105,7 +122,7 @@ const worker = new Worker(
             fs.writeFileSync(path.join(tempDir, "main.cpp"), code);
             fs.writeFileSync(path.join(tempDir, "run.cpp"), renderedRunCpp);
         }
-        
+
         // console.log("User input:\n", input);
         fs.writeFileSync(path.join(tempDir, "input.txt"), input);
 

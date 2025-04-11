@@ -66,6 +66,7 @@ app.post("/run", async (req, res) => {
         language,
         code,
         input: JSON.stringify(item),
+        stripPrints: true,
       });
 
       console.log(`📌 Job added: ${job.id}, waiting for completion...`);
@@ -103,8 +104,6 @@ app.post("/run", async (req, res) => {
 
 app.post("/runSecret", async (req, res) => {
   const { language, code, problemId } = req.body;
-
-  console.log("🚀 language: ", language);
 
   if (!ALLOWED_LANGUAGES.includes(language)) {
     return res.status(400).json({ error: "Unsupported language" });
