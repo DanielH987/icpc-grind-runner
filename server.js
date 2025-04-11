@@ -104,6 +104,8 @@ app.post("/run", async (req, res) => {
 app.post("/runSecret", async (req, res) => {
   const { language, code, problemId } = req.body;
 
+  console.log("🚀 language: ", language);
+
   if (!ALLOWED_LANGUAGES.includes(language)) {
     return res.status(400).json({ error: "Unsupported language" });
   }
