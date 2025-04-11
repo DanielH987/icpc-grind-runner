@@ -2,7 +2,9 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <vector>
 #include <nlohmann/json.hpp>
+using namespace std;
 
 // Declare the user function
 int {{FUNC_NAME}}({{FUNC_DECL_ARGS}});
