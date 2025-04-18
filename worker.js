@@ -124,6 +124,12 @@ const worker = new Worker(
 
             fs.writeFileSync(path.join(tempDir, "main.cpp"), code);
             fs.writeFileSync(path.join(tempDir, "run.cpp"), renderedRunCpp);
+        } else if (language === "java") {
+            filename = "Solution.java";
+            dockerfile = "java.Dockerfile";
+        
+            fs.writeFileSync(path.join(tempDir, filename), code);
+            fs.copyFileSync(path.join(__dirname, "templates/java/run.java"), path.join(tempDir, "Run.java"));
         }
         
         // console.log("User input:\n", input);
